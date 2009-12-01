@@ -1,3 +1,4 @@
 .project
-created.rid
+.classpath
+*.class
 *.*~

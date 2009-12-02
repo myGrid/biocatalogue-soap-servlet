@@ -15,6 +15,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 					</textarea>
 				</form>
         <h2>Original Soap XML</h2>
+				Note that xml tag is stripped of and additions xsl stylesheet tag is added
         <form>
           <textarea cols="100" rows="20" id="data_field" name='Sequence'  readonly="false" >    	
             <xsl:call-template name="xml-to-string"/>

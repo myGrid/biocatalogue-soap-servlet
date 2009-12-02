@@ -1109,7 +1109,8 @@ public class SoapServlet extends WrappingServlet{
 				}
 				if(datatype.equals("string")){
 					out.print(memberName+" ("+(isOptional?"optional, ":"")+
-							"string): <input type='text' name='"+prefix+memberName+(isOptional?":opt":"")+"' size='30'"+rec()+"/>\n");
+							"string): " + "<textarea cols=\"50\" id=\"data_field\" name='"+prefix+memberName+(isOptional?":opt":"")+"' rows=\"3\" "+rec()+"></textarea>");
+//							"<input type='text' name='"+prefix+memberName+(isOptional?":opt":"")+"' size='30'"+rec()+"/>\n");
 				}
 				else if(datatype.equals("int")){
 					out.print(memberName+" ("+(isOptional?"optional, ":"")+

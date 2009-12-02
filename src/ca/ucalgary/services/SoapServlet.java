@@ -339,9 +339,15 @@ public class SoapServlet extends WrappingServlet{
 						out.print("</pre></body></html>");
 						return;
 					}
-					// Now, we don't want to show the output directly, instead escape all markup
-					// so the end-user sees it 
-					answer = "<pre>"+stringResult.toString().replaceAll("<", "&lt;")+"</pre>";
+					
+					answer=stringResult.toString();
+					String[] lines=answer.split(">");
+					String answer2=lines[0]+">\n";
+					answer2=answer2+"<?xml-stylesheet type=\"text/xsl\" href=\"xsl/sample.xsl\"?>";
+					for(int i=1;i<lines.length;i++){
+						answer2=answer2+lines[i]+">\n";
+					}
+					answer=answer2;
 				}
 
 				out.print("<html><head><title>Service Response</title>\n"+

@@ -343,16 +343,16 @@ public class SoapServlet extends WrappingServlet{
 					answer=stringResult.toString();
 					String[] lines=answer.split(">");
 					String answer2=lines[0]+">\n";
-					answer2=answer2+"<?xml-stylesheet type=\"text/xsl\" href=\"xsl/sample.xsl\"?>";
+					answer2=answer2+"<?xml-stylesheet type=\"text/xsl\" href=\"/xsl/sample.xsl\"?>";
 					for(int i=1;i<lines.length;i++){
 						answer2=answer2+lines[i]+">\n";
 					}
 					answer=answer2;
 				}
-
-				out.print("<html><head><title>Service Response</title>\n"+
-						"<link type=\"text/css\" rel=\"stylesheet\" href=\"stylesheets/wsdl_result.css\" /></head>\n" +
-						"<body>"+answer+"</body></html>");
+                out.print(answer);
+//				out.print("<html><head><title>Service Response</title>\n"+
+//						"<link type=\"text/css\" rel=\"stylesheet\" href=\"stylesheets/wsdl_result.css\" /></head>\n" +
+//						"<body>"+answer+"</body></html>");
 	}
 
 	// Asks for the WSDL file

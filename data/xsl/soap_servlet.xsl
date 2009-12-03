@@ -8,7 +8,9 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <xsl:template match="/">
 		<html>
 			<head>
-				<title>SOAP results</title><link type="text/css" rel="stylesheet" href="/css/results.css" />
+				<title>SOAP results</title>
+				<link type="text/css" rel="stylesheet" href="/css/base_packaged.css" />
+				<link type="text/css" rel="stylesheet" href="/css/results.css" />
       </head>
 
 			<body>

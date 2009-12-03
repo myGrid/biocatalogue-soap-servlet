@@ -52,7 +52,8 @@ import java.io.PrintStream;
  */
 
 public class SoapServlet extends WrappingServlet{
-
+	
+	public static final String SITE_BASE_URL = "http://sandbox.biocatalogue.org";
 
 	public static final boolean WRAP_SEMANTICALLY = false; 
 
@@ -367,10 +368,11 @@ public class SoapServlet extends WrappingServlet{
 	private void writeInputForm(HttpServletRequest request,
 			HttpServletResponse response,
 			PrintStream out){
-		out.print("<html><head><title>Generic SOAP Client</title><link type=\"text/css\" rel=\"stylesheet\" href=\"/css/wsdl_ask.css\" /></head>\n");
-		out.print("<body>Enter the URL of the WSDL file below: <form action=''><input name='");
+		out.print(generateHtmlTopBit(null));
+		out.print("Enter the URL of the WSDL file below: <form action=''><input name='");
 		out.print(SRC_PARAM+"' type='text' size='50'/>");
-		out.print("</form></body></html>");
+		out.print("</form>");
+		out.print(generateHtmlBottomBit());
 	}
 
 	// Presents the WSDL file as a CGI form
@@ -387,8 +389,10 @@ public class SoapServlet extends WrappingServlet{
 		}
 
 		try{
-			out.print("<html><head><title>Input interface for WSDL Services at " + url + 
-			"</title><link type=\"text/css\" rel=\"stylesheet\" href=\"/css/input_ask.css\" />\n");
+			out.print(generateHtmlTopBit("Input interface for WSDL Services at " + url));
+			
+			
+			
 			if(recorder != null){
 				out.print(recorder.getHead(request));
 			}
@@ -414,7 +418,8 @@ public class SoapServlet extends WrappingServlet{
 			if(serviceElements == null || serviceElements.getLength() == 0){
 				out.print("Could not find any service elements in the WSDL namespace (" +
 						"http://schemas.xmlsoap.org/wsdl/) in the given WSDL file (" +
-						url + ")</body></html>");
+						url + ")");
+				out.print(generateHtmlBottomBit());
 				return;
 			}
 
@@ -424,7 +429,8 @@ public class SoapServlet extends WrappingServlet{
 				String serviceName = serviceElement.getAttribute("name");
 				if(serviceName == null || serviceName.trim().length() == 0){
 					out.print("A service element in the WSDL file (" +
-							url + ") did not have a 'name' attribute.</body></html>");
+							url + ") did not have a 'name' attribute.");
+					out.print(generateHtmlBottomBit());
 					return;
 				}
 
@@ -442,7 +448,8 @@ public class SoapServlet extends WrappingServlet{
 				if(serviceNamespaceURI == null){
 					out.print("A target namespace declaration (targetNamespace attribute) " +
 							"at or above the service element in the WSDL file (" +
-							url + ") could not be found.</body></html>");
+							url + ") could not be found.");
+					out.print(generateHtmlBottomBit());
 					return;
 				}
 
@@ -456,7 +463,8 @@ public class SoapServlet extends WrappingServlet{
 							"the service " + serviceQName + 
 					", either the WSDL or the expected service name is wrong<br/><pre>");
 					e.printStackTrace(out);
-					out.print("</pre></body></html>");
+					out.print("</pre>");
+					out.print(generateHtmlBottomBit());
 					return;
 				}
 				out.println("<h2>Service " + serviceName + " (namespace " + serviceNamespaceURI + ")</h2>");
@@ -483,7 +491,8 @@ public class SoapServlet extends WrappingServlet{
 						String binding = portElement.getAttribute("binding");
 						if(binding == null || binding.trim().length() == 0){
 							out.print("Error: Could not find binding attribute for port " + 
-									portQName.getLocalPart()+"</body><html>\n");
+									portQName.getLocalPart());
+							out.print(generateHtmlBottomBit());
 							return;
 						}
 						if(binding.indexOf(":") != -1){
@@ -529,7 +538,8 @@ public class SoapServlet extends WrappingServlet{
 							}
 							if(style == null){
 								out.print("Error: Could not find style of soap binding for " + 
-										binding +"</body><html>\n");
+										binding);
+								out.print(generateHtmlBottomBit());
 								return;
 							}
 
@@ -553,7 +563,8 @@ public class SoapServlet extends WrappingServlet{
 								}
 								if(soapAction == null){
 									out.print("Error: Could not find a soapAction attribute for operation " + 
-											opName.getLocalPart()+"(NS "+opName.getNamespaceURI()+")</body><html>\n");
+											opName.getLocalPart()+"(NS "+opName.getNamespaceURI()+")");
+									out.print(generateHtmlBottomBit());
 									return;
 								}
 								op2Action.put(opName, soapAction);
@@ -572,7 +583,8 @@ public class SoapServlet extends WrappingServlet{
 										"body");
 									if(soapInputs == null || soapInputs.getLength() == 0){
 										out.print("Error: Could not find a SOAP body definition for operation " + 
-												opName.getLocalPart()+"(NS "+opName.getNamespaceURI()+")</body><html>\n");
+												opName.getLocalPart()+"(NS "+opName.getNamespaceURI()+")");
+										out.print(generateHtmlBottomBit());
 										return;
 									}
 									Element bodyDef = (Element) soapInputs.item(0);
@@ -580,7 +592,8 @@ public class SoapServlet extends WrappingServlet{
 									if(use == null || use.trim().length() == 0){
 										out.print("Error: Could not find a SOAP body definition " +
 												"'use' attribute for input of operation " + 
-												opName.getLocalPart()+"(NS "+opName.getNamespaceURI()+")</body><html>\n");
+												opName.getLocalPart()+"(NS "+opName.getNamespaceURI()+")");
+										out.print(generateHtmlBottomBit());
 										return;
 									}
 									if(inputMsgName == null || inputMsgName.trim().length() == 0){
@@ -612,7 +625,8 @@ public class SoapServlet extends WrappingServlet{
 										"body");
 									if(soapOutputs == null || soapOutputs.getLength() == 0){
 										out.print("Error: Could not find a SOAP body definition for operation " + 
-												opName.getLocalPart()+"(NS "+opName.getNamespaceURI()+")</body><html>\n");
+												opName.getLocalPart()+"(NS "+opName.getNamespaceURI()+")");
+										out.print(generateHtmlBottomBit());
 										return;
 									}
 									Element bodyDef = (Element) soapOutputs.item(0);
@@ -620,7 +634,8 @@ public class SoapServlet extends WrappingServlet{
 									if(use == null || use.trim().length() == 0){
 										out.print("Error: Could not find a SOAP body definition " +
 												"'use' attribute for output of operation " + 
-												opName.getLocalPart()+"(NS "+opName.getNamespaceURI()+")</body><html>\n");
+												opName.getLocalPart()+"(NS "+opName.getNamespaceURI()+")n");
+										out.print(generateHtmlBottomBit());
 										return;
 									}
 									msg2Use.put(outputMsgQName, use);
@@ -655,14 +670,16 @@ public class SoapServlet extends WrappingServlet{
 										//System.err.println("There are " + inputs.getLength() + " input bindings");
 										if(inputs == null || inputs.getLength() == 0){
 											out.print("Error: Could not find a WSDL input definition for operation " + 
-													opName.getLocalPart()+"(NS "+opName.getNamespaceURI()+")</body><html>\n");
+													opName.getLocalPart()+"(NS "+opName.getNamespaceURI()+")");
+											out.print(generateHtmlBottomBit());
 											return;
 										}
 										Element input = (Element) inputs.item(0);
 										String inputMessage = input.getAttribute("message");
 										if(inputMessage == null || inputMessage.trim().length() == 0){
 											out.print("Error: Could not find a WSDL portType input message type for operation " + 
-													opName.getLocalPart()+"(NS "+opName.getNamespaceURI()+")</body><html>\n");
+													opName.getLocalPart()+"(NS "+opName.getNamespaceURI()+")");
+											out.print(generateHtmlBottomBit());
 											return;
 										}
 										String inputName = input.getAttribute("name");
@@ -683,14 +700,16 @@ public class SoapServlet extends WrappingServlet{
 											"output");
 										if(outputs == null || outputs.getLength() == 0){
 											out.print("Error: Could not find a WSDL output definition for operation " + 
-													opName.getLocalPart()+"(NS "+opName.getNamespaceURI()+")</body><html>\n");
+													opName.getLocalPart()+"(NS "+opName.getNamespaceURI()+")");
+											out.print(generateHtmlBottomBit());
 											return;
 										}
 										Element output = (Element) outputs.item(0);
 										String outputMessage = output.getAttribute("message");
 										if(outputMessage == null || outputMessage.trim().length() == 0){
 											out.print("Error: Could not find a WSDL portType output message type for operation " + 
-													opName.getLocalPart()+"(NS "+opName.getNamespaceURI()+")</body><html>\n");
+													opName.getLocalPart()+"(NS "+opName.getNamespaceURI()+")");
+											out.print(generateHtmlBottomBit());
 											return;
 										}
 										String outputName = output.getAttribute("name");
@@ -736,7 +755,8 @@ public class SoapServlet extends WrappingServlet{
 									else{
 										out.print("Error: Could not find either an 'element' for " +
 												"'type' attribute for message part " + partName + 
-												" of message " + messageName + "</body></html>");
+												" of message " + messageName);
+										out.print(generateHtmlBottomBit());
 										return;
 									}
 								}
@@ -768,7 +788,8 @@ public class SoapServlet extends WrappingServlet{
 									String elementName = element.getAttribute("name");
 									if(elementName == null || elementName.trim().length() == 0){
 										out.print("Error: Could not find the name attribute for a schema element (#" +
-												n + " of type declaration block #" + m + "</body></html>");
+												n + " of type declaration block #" + m);
+										out.print(generateHtmlBottomBit());
 										return;
 									}
 
@@ -828,7 +849,8 @@ public class SoapServlet extends WrappingServlet{
 										if(subelementName == null || subelementName.trim().length() == 0){
 											if(subelementRef == null || subelementRef.trim().length() == 0){
 												out.print("Error: Could not find the name attribute for a schema subelement (#" +
-														p + " of schema element " + elementName + "</body></html>");
+														p + " of schema element " + elementName);
+												out.print(generateHtmlBottomBit());
 												return;
 											}
 											else{
@@ -856,7 +878,8 @@ public class SoapServlet extends WrappingServlet{
 											else{
 												out.print("Error: Could not find the type attribute for a schema subelement (#" +
 														p + " of schema element " + elementName + "), found " + 
-														exts.getLength() + " candidates</body></html>");
+														exts.getLength() + " candidates");
+												out.print(generateHtmlBottomBit());
 												return;
 											}
 										}
@@ -980,7 +1003,7 @@ public class SoapServlet extends WrappingServlet{
 				// for jax-ws ports
 			} // for services
 
-			out.print("</body></html>\n");
+			out.print(generateHtmlBottomBit());
 		}
 		catch(java.io.IOException ioe){
 			logger.log(Level.SEVERE, "While printing HTML form to servlet output stream", ioe);
@@ -1334,5 +1357,184 @@ public class SoapServlet extends WrappingServlet{
 				}
 			}
 		}
+	}
+	
+	protected String generateHtmlTopBit(String title) {
+		StringBuilder output = new StringBuilder();
+		
+		output.append("<html>");
+		output.append("\n");
+		output.append("<head>");
+		output.append("\n");
+		output.append("<meta http-equiv=\"content-type\" content=\"text/html;charset=UTF-8\" />");
+		output.append("\n");
+		
+		if(title != null && title.length() > 0) {
+			output.append("<title>BioCatalogue.org &#45; Generic SOAP Client &#45; " + title + "</title>");
+		} else {
+			output.append("<title>BioCatalogue.org &#45; Generic SOAP Client</title>");
+		}
+		output.append("\n");
+		
+		output.append("<link type=\"text/css\" rel=\"stylesheet\" href=\"/css/base_packaged.css\" />");
+		output.append("\n");
+		output.append("<link type=\"text/css\" rel=\"stylesheet\" href=\"/css/wsdl_ask.css\" />");
+		output.append("\n");
+		output.append("<link type=\"text/css\" rel=\"stylesheet\" href=\"/css/input_ask.css\" />");
+		output.append("\n");
+		
+		output.append("<script src=\"/javascripts/boxover.js?\" type=\"text/javascript\"></script>");
+		output.append("\n");
+		
+		output.append("<link rel=\"icon\" href=\"/images/favicon.ico\" type=\"image/x-icon\" />");
+		output.append("\n");
+		output.append("<link rel=\"shortcut icon\" href=\"/images/favicon.ico\" type=\"image/x-icon\"/>");
+		output.append("\n");
+		
+		output.append("<link href=\"" + SITE_BASE_URL + "/announcements.atom\" rel=\"alternate\" title=\"BioCatalogue.org - Site Announcements\" type=\"application/atom+xml\" />");
+		output.append("\n");
+		output.append("<link href=\"" + SITE_BASE_URL + "/services.atom\" rel=\"alternate\" title=\"BioCatalogue.org - Latest Services\" type=\"application/atom+xml\" />");
+		output.append("\n");
+		output.append("<link rel=\"" + SITE_BASE_URL + "/search\" type=\"application/opensearchdescription+xml\" title=\"BioCatalogue Search\" href=\"/opensearch.xml\" />");
+		output.append("\n");
+		
+		output.append("</head>");
+		output.append("\n");
+		
+		output.append("<body>");
+		output.append("\n");
+		
+		output.append("<div id=\"header-region\" class=\"clear-block\"></div>");
+		output.append("\n");
+
+		output.append("<div id=\"wrapper\">");
+		output.append("\n");
+
+		output.append("<div id=\"container\" class=\"clear-block\">");
+		output.append("\n");
+
+		output.append("<div id=\"header\">");
+		output.append("\n");
+		
+		output.append("<div id=\"logo-floater\">");
+		output.append("\n");
+		output.append("<a href=\"" + SITE_BASE_URL + "\"><img alt=\"www.biocatalogue.org\" src=\"/images/logo_beta_small.png?\" /></a>");
+		output.append("\n");
+		output.append("</div>");
+		output.append("\n");
+							
+		output.append("<ul class=\"primary-links\">");
+		output.append("\n");
+		output.append("<li><a href=\"http://www.biocatalogue.org/wiki\" target=\"_blank\">About Us</a></li>");
+		output.append("\n");
+		output.append("<li class=\"separator\"><a class=\"end\" href=\"" + SITE_BASE_URL + "/contact\">Contact Us</a></li>");
+		output.append("\n");
+		output.append("</ul>");
+		output.append("\n");
+		
+		output.append("</div>");
+		output.append("\n");
+		
+		output.append("<div id=\"center\"><div id=\"squeeze\"><div class=\"right-corner\"><div class=\"left-corner\">");
+		output.append("\n");
+		
+		output.append("<div id=\"action_bar\">");
+		output.append("\n");
+		
+		output.append("<form action=\"" + SITE_BASE_URL + "/search\" class=\"search_form\" method=\"get\" style=\"display: inline;\">");
+		output.append("\n");
+		output.append("Search: ");
+		output.append("<input id=\"action_bar_search_field\" name=\"q\" size=\"28\" type=\"text\" /> ");
+		output.append("<input class=\"search_button\" name=\"commit\" type=\"submit\" value=\"\" /> ");
+		output.append("\n");
+		output.append("</form>");
+		output.append("\n");
+		
+		output.append("<span id=\"action_links\">");
+		output.append("\n");
+		output.append("<a href=\"" + SITE_BASE_URL + "\"><span class=\"label\">Home</span></a>");
+		output.append("<a href=\"" + SITE_BASE_URL + "/services\"><img alt=\"Service\" src=\"/images/service.png\" style=\"vertical-align: middle; margin-right: 0.4em;\" /><span class=\"label\">Services</span></a>");
+		output.append("<a href=\"" + SITE_BASE_URL + "/services/new\"><img alt=\"Add\" src=\"/images/add.png\" style=\"vertical-align: middle; margin-right: 0.4em;\" /><span class=\"label\">Register a Service</span></a>");
+		output.append("<a href=\"" + SITE_BASE_URL + "/service_providers\"><img alt=\"Group_gear\" src=\"/images/group_gear.png\" style=\"vertical-align: middle; margin-right: 0.4em;\" /><span class=\"label\">Providers</span></a>");
+		output.append("\n");
+		output.append("<span style=\"background: transparent url(../images/green_separator.gif) no-repeat left;\">&nbsp;</span>");
+		output.append("\n");
+		output.append("</span>");
+		output.append("\n");
+
+		output.append("<span id=\"search_dropdown_button\"><ul class=\"p7menubar\"><li><a href=\"#\" class=\"trigger\"><img alt=\"dropdown menu\" src=\"/images/dropdown.png\" /></a><ul><li><a href=\"" + SITE_BASE_URL + "/search/by_data\">Search by Data</a></li></ul></li></ul></span>");
+		output.append("\n");
+		
+		output.append("</div>");
+		output.append("\n");
+
+		output.append("<div id=\"action_icons\">");
+		output.append("\n");
+		output.append("<a href=\"" + SITE_BASE_URL + "/services.atom\" target=\"_blank\" title=\"header=[] body=[Subscribe to the &lt;b&gt;Latest Services&lt;/b&gt; feed] cssheader=[boxoverTooltipHeader] cssbody=[boxoverTooltipBody] delay=[200]\"><img alt=\"Feed_icon\" src=\"/images/feed_icon.png\" /></a>");
+		output.append("\n");
+		output.append("</div>");
+		
+		output.append("<div id=\"breadcrumbs_bar\"><table><tr><td><ul class=\"breadcrumb_list\"><li><a href=\"" + SITE_BASE_URL + "\">Home</a></li><li> <b>&#187;</b> </li><li><span>Generic SOAP Client</span></li></ul></td>");
+		output.append("<td style=\"text-align: right; overflow: hidden;\"><!-- AddThis Button BEGIN --><script type=\"text/javascript\">var addthis_pub = 'biocatalogue';</script><a href=\"http://www.addthis.com/bookmark.php?v=20\" onmouseover=\"return addthis_open(this, '', '[URL]', '[TITLE]')\" onmouseout=\"addthis_close()\" onclick=\"return addthis_sendto()\" title=\"\"><img src=\"https://secure.addthis.com/static/btn/lg-share-en.gif\" width=\"125\" height=\"16\" border=\"0\" alt=\"Bookmark and Share\" /></a><script type=\"text/javascript\" src=\"https://secure.addthis.com/js/200/addthis_widget.js\"></script><!-- AddThis Button END --></td>");
+		output.append("</tr></table></div>");
+		output.append("\n");
+		
+		output.append("<div id=\"content\">");
+		output.append("\n");
+			
+		return output.toString();
+	}
+	
+	protected String generateHtmlBottomBit() {
+		StringBuilder output = new StringBuilder();
+		
+		output.append("<html>");
+		output.append("\n");
+		
+		output.append("</div>");        
+		output.append("\n");
+		
+		output.append("<span class=\"clear\"></span>");
+		output.append("\n");
+		
+		output.append("</div></div></div></div> <!-- /.left-corner, /.right-corner, /#squeeze, /#center --> </div> <!-- /container -->");
+		output.append("\n");
+		
+		output.append("<div id=\"footer\">");
+		output.append("\n");
+		output.append("<div id=\"footer_links\"><ul><li><a href=\"" + SITE_BASE_URL + "/termsofuse\">Terms of use</a></li><li class=\"separator\"><a href=\"http://www.biocatalogue.org/wiki\">About us</a></li>");
+		output.append("<li class=\"separator\"><a href=\"" + SITE_BASE_URL + "/contact\">Contact us</a></li>");
+		output.append("<li class=\"separator\"><a href=\"http://listserv.manchester.ac.uk/cgi-bin/wa?SUBED1=biocatalogue-friends&A=1\" target=\"_blank\">Join the friends list</a></li></ul>");
+		output.append("\n");
+		output.append("</div>");
+		output.append("\n");
+		
+		output.append("<span class=\"clear\">&nbsp;</span>");
+		output.append("\n");
+		
+		output.append("<center><div class=\"logos\"><p style=\"font-size: 108%;\"><b>The BioCatalogue is brought to you by:</b></p>");
+		output.append("<p><a href=\"http://www.manchester.ac.uk/\" target=\"_blank\"><img alt=\"University of Manchester\" src=\"/images/manchester_logo.png\" /></a>");
+		output.append("<a href=\"http://www.ebi.ac.uk/\" target=\"_blank\"><img alt=\"EMBL-EBI\" src=\"/images/ebi_logo.png\" /></a>");
+		output.append("<span>and the same people who brought you</span>");
+		output.append("<a href=\"http://www.myexperiment.org/\" target=\"_blank\"><img alt=\"myExperiment\" src=\"/images/myexp_logo.png\" /></a>");
+		output.append("<a href=\"http://www.taverna.org.uk/\" target=\"_blank\"><img alt=\"Taverna\" src=\"/images/taverna_logo.png\" /></a></p>");
+		output.append("</div></center>");
+		output.append("\n");
+		
+		output.append("<p>The BioCatalogue project is funded by the <a target=\"_blank\" href=\"http://www.bbsrc.ac.uk/\">BBSRC</a> (BB/F01046X/1, BB/F010540/1)</p>");
+		output.append("<p style=\"margin-top: 1em;\"><a href=\"http://www.bbsrc.ac.uk/\" target=\"_blank\"><img alt=\"BBSRC\" src=\"/images/bbsrc_logo.png\" /></a>	</p>");
+		output.append("\n");
+		output.append("<p class=\"copyright\">Copyright (c) 2008 - 2009<a href=\"http://www.manchester.ac.uk/\" target=\"_blank\">The University of Manchester</a> and the<a href=\"http://www.ebi.ac.uk/\" target=\"_blank\">European Bioinformatics Institute (EMBL-EBI)</a></p>");
+		output.append("\n");
+
+		output.append("</div>");
+		output.append("\n");
+
+		output.append("</div> <!-- /wrapper -->");
+		output.append("\n");
+		output.append("</body>");
+		output.append("</html>");
+			
+		return output.toString();
 	}
 }

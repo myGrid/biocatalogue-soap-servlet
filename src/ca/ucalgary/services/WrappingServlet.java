@@ -43,7 +43,7 @@ public abstract class WrappingServlet extends HttpServlet{
 	public static final String SRC_PARAM = "srcSpec"; //used in input form creation
 	public static final String ID_PARAM = "seahawkId"; //ditto
 	public static final String SERVICE_SPEC_PARAM = "service"; //used in example form submission
-
+	public static final String OPERATION_HTTP_PARAM = "operation";
 	private static Logger logger = Logger.getLogger(WrappingServlet.class.getName());
 
 	protected DataRecorder recorder = null;
@@ -156,6 +156,7 @@ public abstract class WrappingServlet extends HttpServlet{
 
 			URL url = null;
 			String serviceSpecLoc = request.getParameter(SRC_PARAM);
+			String operation = request.getParameter(OPERATION_HTTP_PARAM);
 			if(serviceSpecLoc != null && serviceSpecLoc.trim().length() > 0){
 				try{
 					url = new URL(serviceSpecLoc);
@@ -168,7 +169,7 @@ public abstract class WrappingServlet extends HttpServlet{
 					return;
 				}
 			}
-			writeServiceForm(request, response, url, out);
+			writeServiceForm(request, response, url, out, operation);
 		}
 	}
 
@@ -231,7 +232,7 @@ public abstract class WrappingServlet extends HttpServlet{
 	protected abstract void writeServiceForm(HttpServletRequest request,
 			HttpServletResponse response,
 			URL serviceEndpointURL,
-			PrintStream out);
+			PrintStream out,String operationName);
 
 	/**
 	 * Should call the following methods if a recorder was set:

@@ -339,27 +339,35 @@ public class SoapServlet extends WrappingServlet{
 						out.print("</pre></body></html>");
 						return;
 					}
-					
+
 					answer=stringResult.toString();
 					String[] lines=answer.split(">");
 					String answer2=lines[0]+">\n";
-					answer2=answer2+"<?xml-stylesheet type=\"text/xsl\" href=\"/xsl/sample.xsl\"?>";
+					answer2=answer2+"<?xml-stylesheet type=\"text/xsl\" href=\"/xsl/soap_servlet.xsl\"?>\n";
+					answer2=answer2+"<root>\n";
+					answer2=answer2+"<output>\n";
 					for(int i=1;i<lines.length;i++){
-						answer2=answer2+lines[i]+">\n";
+						answer2=answer2+lines[i]+">";
 					}
+					answer2=answer2+"</output>\n";
+					answer2=answer2+"<input>\n";
+					answer2=answer2+source.toString();
+					answer2=answer2+"</input>\n";
+					answer2=answer2+"</root>\n";
 					answer=answer2;
 				}
-                out.print(answer);
-//				out.print("<html><head><title>Service Response</title>\n"+
-//						"<link type=\"text/css\" rel=\"stylesheet\" href=\"stylesheets/wsdl_result.css\" /></head>\n" +
-//						"<body>"+answer+"</body></html>");
+				out.print(answer);
+
+				//				out.print("<html><head><title>Service Response</title>\n"+
+				//						"<link type=\"text/css\" rel=\"stylesheet\" href=\"stylesheets/wsdl_result.css\" /></head>\n" +
+				//						"<body>"+answer+"</body></html>");
 	}
 
 	// Asks for the WSDL file
 	private void writeInputForm(HttpServletRequest request,
 			HttpServletResponse response,
 			PrintStream out){
-		out.print("<html><head><title>Generic SOAP Client</title><link type=\"text/css\" rel=\"stylesheet\" href=\"stylesheets/wsdl_ask.css\" /></head>\n");
+		out.print("<html><head><title>Generic SOAP Client</title><link type=\"text/css\" rel=\"stylesheet\" href=\"/css/wsdl_ask.css\" /></head>\n");
 		out.print("<body>Enter the URL of the WSDL file below: <form action=''><input name='");
 		out.print(SRC_PARAM+"' type='text' size='50'/>");
 		out.print("</form></body></html>");
@@ -369,7 +377,7 @@ public class SoapServlet extends WrappingServlet{
 	protected void writeServiceForm(HttpServletRequest request,
 			HttpServletResponse response,
 			URL url,
-			PrintStream out){
+			PrintStream out,String operationName){
 
 		// Normal web-browser form fill-in, ask for the WSDL to wrap
 		// Useful so this servlet can standalone and borker WSDL services.
@@ -380,7 +388,7 @@ public class SoapServlet extends WrappingServlet{
 
 		try{
 			out.print("<html><head><title>Input interface for WSDL Services at " + url + 
-			"</title><link type=\"text/css\" rel=\"stylesheet\" href=\"stylesheets/input_ask.css\" />\n");
+			"</title><link type=\"text/css\" rel=\"stylesheet\" href=\"/css/input_ask.css\" />\n");
 			if(recorder != null){
 				out.print(recorder.getHead(request));
 			}
@@ -889,79 +897,81 @@ public class SoapServlet extends WrappingServlet{
 							// Now we have enough info to print forms for the operations
 							//System.err.println("About to print services");
 							for(QName opQName: op2InMsg.keySet()){
-								//System.err.println("printing service for " + opQName);
-								QName messageQName = op2InMsg.get(opQName);
-								if(messageQName == null){
-									System.err.println("Got null value for message of " + opQName);
-									continue;
-								}
-								// set the encapsulating element to the operation name if rpc, or element name if doc
-								String actionSpec = serviceQName.getNamespaceURI()+" "+serviceQName.getLocalPart()+" "+
-								portQName.getNamespaceURI() + " " + portQName.getLocalPart() + " ";
-								out.print("<a name='" + opQName.getLocalPart() + "'></a><div class='operation'><h3>"+
-										opQName.getLocalPart()+"</h3><form action='' method='post'>\n"+
-										"<input type='hidden' name='"+SRC_PARAM+"' value='"+url+"'/>\n");
-								Map<String,QName> partsMap = msg2Parts.get(messageQName);
-								if(partsMap == null){
-									System.err.println("Got null parts map for message " + messageQName);
-									continue;
-								} 
-								boolean isRpcStyle = "rpc".equals(style);
+								if (operationName==null || opQName.getLocalPart().equals(operationName)){
+									//System.err.println("printing service for " + opQName);
+									QName messageQName = op2InMsg.get(opQName);
+									if(messageQName == null){
+										System.err.println("Got null value for message of " + opQName);
+										continue;
+									}
+									// set the encapsulating element to the operation name if rpc, or element name if doc
+									String actionSpec = serviceQName.getNamespaceURI()+" "+serviceQName.getLocalPart()+" "+
+									portQName.getNamespaceURI() + " " + portQName.getLocalPart() + " ";
+									out.print("<a name='" + opQName.getLocalPart() + "'></a><div class='operation'><h3>"+
+											opQName.getLocalPart()+"</h3><form action='' method='post'>\n"+
+											"<input type='hidden' name='"+SRC_PARAM+"' value='"+url+"'/>\n");
+									Map<String,QName> partsMap = msg2Parts.get(messageQName);
+									if(partsMap == null){
+										System.err.println("Got null parts map for message " + messageQName);
+										continue;
+									} 
+									boolean isRpcStyle = "rpc".equals(style);
 
-								String use = msg2Use.get(messageQName);
-								if(use == null){
-									use = msg2Use.get(opQName);
-								}
+									String use = msg2Use.get(messageQName);
+									if(use == null){
+										use = msg2Use.get(opQName);
+									}
 
-								for(Map.Entry<String,QName> part: partsMap.entrySet()){
-									// doc style, should be only one part
-									if(!isRpcStyle){ // assume document style
-										QName dataType = part.getValue();
-										actionSpec = actionSpec + dataType.getNamespaceURI()+ " " +
-										dataType.getLocalPart();
-										Map<String,QName> subpartsMap = element2Members.get(dataType);
-										if(subpartsMap == null){
-											if(dataType.getNamespaceURI().equals("http://schemas.xmlsoap.org/soap/encoding/")){
-												writeDataType(out, part.getKey(),
-														part.getValue(), element2Members, type2Members, "");
-											}
-											else{
-												out.print("Error: cannot find definition for data type " + 
-														dataType + "\nValid types are:");
-												for(QName key: element2Members.keySet()){
-													out.print(" "+key);
+									for(Map.Entry<String,QName> part: partsMap.entrySet()){
+										// doc style, should be only one part
+										if(!isRpcStyle){ // assume document style
+											QName dataType = part.getValue();
+											actionSpec = actionSpec + dataType.getNamespaceURI()+ " " +
+											dataType.getLocalPart();
+											Map<String,QName> subpartsMap = element2Members.get(dataType);
+											if(subpartsMap == null){
+												if(dataType.getNamespaceURI().equals("http://schemas.xmlsoap.org/soap/encoding/")){
+													writeDataType(out, part.getKey(),
+															part.getValue(), element2Members, type2Members, "");
 												}
+												else{
+													out.print("Error: cannot find definition for data type " + 
+															dataType + "\nValid types are:");
+													for(QName key: element2Members.keySet()){
+														out.print(" "+key);
+													}
+												}
+												continue;
 											}
-											continue;
-										}
-										if(subpartsMap.containsKey(BASIC_TYPE_SENTINEL)){
-											QName t = subpartsMap.get(BASIC_TYPE_SENTINEL);
-											while(DEFERRED_NAMESPACE_URI.equals(t.getNamespaceURI())){
-												String[] p = t.getLocalPart().split("_deferred_");
-												t = new QName(decode(p[0]), p[1]);
+											if(subpartsMap.containsKey(BASIC_TYPE_SENTINEL)){
+												QName t = subpartsMap.get(BASIC_TYPE_SENTINEL);
+												while(DEFERRED_NAMESPACE_URI.equals(t.getNamespaceURI())){
+													String[] p = t.getLocalPart().split("_deferred_");
+													t = new QName(decode(p[0]), p[1]);
+												}
+												if(t.getNamespaceURI().equals("http://www.w3.org/2001/XMLSchema")){
+													throw new Exception("Got bare XSD type as contents of WSDL message");
+												}
+												subpartsMap = type2Members.get(t);
 											}
-											if(t.getNamespaceURI().equals("http://www.w3.org/2001/XMLSchema")){
-												throw new Exception("Got bare XSD type as contents of WSDL message");
+											for(Map.Entry<String,QName> subpart: subpartsMap.entrySet()){
+												writeDataType(out, subpart.getKey(), subpart.getValue(), type2Members, type2Members, "");
 											}
-											subpartsMap = type2Members.get(t);
 										}
-										for(Map.Entry<String,QName> subpart: subpartsMap.entrySet()){
-											writeDataType(out, subpart.getKey(), subpart.getValue(), type2Members, type2Members, "");
+										else{ // rpc style
+											writeDataType(out, part.getKey(), part.getValue(), element2Members, type2Members, "");
 										}
+									}  // for parts
+									// special condition for rpc calls, still need to give the op ns & name
+									if(isRpcStyle){
+										actionSpec = actionSpec + opQName.getNamespaceURI() + " " + opQName.getLocalPart();
 									}
-									else{ // rpc style
-										writeDataType(out, part.getKey(), part.getValue(), element2Members, type2Members, "");
-									}
-								}  // for parts
-								// special condition for rpc calls, still need to give the op ns & name
-								if(isRpcStyle){
-									actionSpec = actionSpec + opQName.getNamespaceURI() + " " + opQName.getLocalPart();
-								}
-								actionSpec = actionSpec + " " + op2Action.get(opQName) + " " + 
-								opQName.getLocalPart() + " " + style + " " + use;
-								out.print("<input type='hidden' name='"+SERVICE_SPEC_PARAM+"' value='"+actionSpec+"'/>");
-								out.print("<input type='submit' value='Execute service'"+sub()+"/></form>\n");
-							}  // for ops
+									actionSpec = actionSpec + " " + op2Action.get(opQName) + " " + 
+									opQName.getLocalPart() + " " + style + " " + use;
+									out.print("<input type='hidden' name='"+SERVICE_SPEC_PARAM+"' value='"+actionSpec+"'/>");
+									out.print("<input type='submit' value='Execute service'"+sub()+"/></form>\n");
+								}  // for ops
+							}
 						} // for wsdl:binding    
 					}  //for wsdl port
 				}while(portQNames.hasNext());
@@ -1116,7 +1126,7 @@ public class SoapServlet extends WrappingServlet{
 				if(datatype.equals("string")){
 					out.print(memberName+" ("+(isOptional?"optional, ":"")+
 							"string): " + "<textarea cols=\"50\" id=\"data_field\" name='"+prefix+memberName+(isOptional?":opt":"")+"' rows=\"3\" "+rec()+"></textarea>");
-//							"<input type='text' name='"+prefix+memberName+(isOptional?":opt":"")+"' size='30'"+rec()+"/>\n");
+					//							"<input type='text' name='"+prefix+memberName+(isOptional?":opt":"")+"' size='30'"+rec()+"/>\n");
 				}
 				else if(datatype.equals("int")){
 					out.print(memberName+" ("+(isOptional?"optional, ":"")+

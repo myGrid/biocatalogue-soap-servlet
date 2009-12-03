@@ -397,7 +397,9 @@ public class SoapServlet extends WrappingServlet{
 			if(recorder != null){
 				out.print(recorder.getBody(request));
 			}
-
+			//print disclaimer
+			out.print("PLEASE NOTE:<br/>  Your service calls might be logged and used for analysis and/or annotation of services in the future.<br/> Therefore do not use any secure or confidential data here.<br/> ");
+			
 			// Use JAX-WS to get the service and port list
 			// Verify if the service info was actually parsed properly by trying to use it with JAX-WS
 

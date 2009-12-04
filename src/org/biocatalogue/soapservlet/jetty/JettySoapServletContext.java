@@ -18,7 +18,7 @@ public class JettySoapServletContext
 	{
 		Server server = new Server();
 		SelectChannelConnector connector = new SelectChannelConnector();
-		connector.setPort(9999);
+		connector.setPort(8080);
 		server.addConnector(connector);
 
 		ResourceHandler resource_handler = new ResourceHandler();
